@@ -1,0 +1,37 @@
+package com.game.module.bag.dao;
+
+import java.util.List;
+
+import net.paoding.rose.jade.annotation.DAO;
+import net.paoding.rose.jade.annotation.SQL;
+
+import com.game.module.bag.model.BagItem;
+import com.game.module.bag.model.ConfigUpdateBagModel;
+
+/**
+ * @author liuzhengyi
+ * @date 2014年11月19日 上午11:38:02
+ */
+@DAO
+public interface BagDao {
+
+
+	@SQL("SELECT * FROM bag_item where playerId =:1")
+	public List<BagItem> getBagItemList(int playerId);
+
+	@SQL("delete FROM bag_item where uid =:1.uid")
+	public void deleteBagItem(BagItem item);
+
+	@SQL("update bag_item set playerId =:1.playerId, count =:1.count where uid =:1.uid")
+	public void updateBagItem(BagItem item);
+
+	@SQL("insert into bag_item (uid, playerId, count) values(:1.uid, :1.playerId, :1.count)")
+	public int addBagItem(BagItem item);
+	
+	
+	
+	
+	@SQL("SELECT * FROM frame_design.design_warehouse_lvup")
+	public ConfigUpdateBagModel getUpdateBagModel();
+
+}

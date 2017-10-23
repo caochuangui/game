@@ -1,0 +1,48 @@
+package com.game.module.test.event;
+
+import com.frame.OnlinePlayerManager;
+import com.frame.base.GameSession;
+import com.frame.extention.AbstractEventJob;
+import com.frame.packet.anotation.Extention;
+import com.game.module.MsgId;
+import com.game.module.PacketId;
+import com.game.module.player.model.Player;
+import com.game.module.player.service.PlayerService;
+
+/**
+ * @author liuzhengyi
+ * @date 2014年12月15日 上午11:51:03
+ */
+@Extention(extentionId = PacketId.ADD_COPPER, msgId = MsgId.ADD_COPPER)
+public class AddCopperJob extends AbstractEventJob {
+
+	/**
+	 * 
+	 * @see com.gzwabao.frame.extention.AbstractEventJob#excete()
+	 */
+	@Override
+	public Object excete() {
+		String msg = getMess();
+		String[] msgArray = msg.split(" ");
+		
+		int copper = 1000;
+		if (msgArray.length >= 2) {
+			try {
+                copper = Integer.parseInt(msgArray[1]);
+			} catch (Exception ex) {}
+		}
+		
+		GameSession gs = OnlinePlayerManager.getIntance().getGameSsionByChannel(getChannel());
+		Player player = gs.getPlayer();
+		if (player == null) {
+			return MsgId.ADD_COPPER + " -6 " + "未登录";
+		}
+		
+		int cur_copper = player.getCopper() + copper;
+		player.setCopper(cur_copper);
+		PlayerService.getInstance().updatePlayer(player);
+		
+		return MsgId.ADD_COPPER + " " + cur_copper;
+	}
+
+}

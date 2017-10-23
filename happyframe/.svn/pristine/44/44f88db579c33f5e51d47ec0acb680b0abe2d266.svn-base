@@ -1,0 +1,86 @@
+package com.game.module.bag.service;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.frame.bean.ILoad;
+import com.frame.listener.anotation.Listener;
+import com.game.module.bag.dao.BagDao;
+import com.game.module.bag.model.BagItem;
+import com.game.module.bag.model.ConfigUpdateBagModel;
+
+/**
+ * @author liuzhengyi
+ * @date 2014年11月17日 下午8:59:00
+ */
+@Component
+@Listener
+public class BagService implements ILoad {
+	private static final Logger log = LoggerFactory
+			.getLogger(BagService.class);
+
+	private static BagService instance;
+
+	@Autowired
+	BagDao bagDao;
+
+	private ConfigUpdateBagModel updateBagModel;
+
+	public BagService() {
+		instance = this;
+	}
+
+	public static BagService getInstance() {
+		return instance;
+	}
+
+	public ConfigUpdateBagModel getUpdateBagModel() {
+		return updateBagModel;
+	}
+
+	
+	public List<BagItem> getBagItemList(int playerId) {
+		return bagDao.getBagItemList(playerId);
+	}
+	
+	public int addBagItem(BagItem item) {
+		if (item == null) {
+			return -3;
+		}
+		int uid = bagDao.addBagItem(item);
+		if (uid <= 0) {
+			return -1;
+		}
+		item.setUid(uid);
+		return 0;
+	}
+
+
+	/**
+	 * 
+	 * @see frame.bean.ILoad#load()
+	 */
+	@Override
+	public void load() throws Exception {
+
+		updateBagModel = bagDao.getUpdateBagModel();
+		
+		
+		
+		log.info("BagService load");
+	}
+
+//	/**
+//	 * 
+//	 * @see game.commom.listener.RemoveCacheListener#removeCache(int)
+//	 */
+//	@Action(type = ListenerType.REMOVE_CACHE)
+//	public void removeCache(int playerId) {
+//		allPlayers.remove(playerId);
+//	}
+
+}

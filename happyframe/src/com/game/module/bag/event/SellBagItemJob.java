@@ -1,0 +1,83 @@
+package com.game.module.bag.event;
+
+import com.frame.OnlinePlayerManager;
+import com.frame.base.GameSession;
+import com.frame.extention.AbstractEventJob;
+import com.frame.packet.anotation.Extention;
+import com.game.module.MsgId;
+import com.game.module.PacketId;
+import com.game.module.bag.model.BagItem;
+import com.game.module.bag.service.BagService;
+import com.game.module.player.model.Player;
+import com.game.module.player.service.PlayerService;
+
+/**
+ * @author liuzhengyi
+ * @date 2014年12月15日 上午11:51:03
+ */
+@Extention(extentionId = PacketId.SELL_BAG_ITEM, msgId = MsgId.SELL_BAG_ITEM)
+public class SellBagItemJob extends AbstractEventJob {
+
+	/**
+	 * 
+	 * @see com.gzwabao.frame.extention.AbstractEventJob#excete()
+	 */
+	@Override
+	public Object excete() {
+		String msg = getMess();
+		String[] msgArray = msg.split(" ");
+		if (msgArray.length < 2) {
+			return MsgId.SELL_BAG_ITEM + " -3 " + "输入参数错误";
+		}
+
+//		REQ:	whsell [u_id] [item_count]
+//		RESP:	whsell [u_id] [item_count] [money] 
+
+		
+		GameSession gs = OnlinePlayerManager.getIntance().getGameSsionByChannel(getChannel());
+		
+		Player player = gs.getPlayer();
+		if (player == null) {
+			return MsgId.SELL_BAG_ITEM + " -6 " + "未登录";
+		}
+		
+		int u_id = 0;
+		int item_count = 0;
+		try {
+			u_id = Integer.parseInt(msgArray[1]);
+			item_count = Integer.parseInt(msgArray[2]);
+			
+			if ((u_id <= 0) || (item_count <= 0)) {
+                return MsgId.SELL_BAG_ITEM + " -13 " + "输入参数错误";
+			}
+		} catch (Exception ex) {
+			return MsgId.SELL_BAG_ITEM + " -23 " + "输入参数错误";
+		}
+
+		BagItem item = BagService.getInstance().getBagItem(u_id);
+		if (item == null) {
+			return MsgId.SELL_BAG_ITEM + " -6 " + "物品不存在";
+		}
+		if (item.getCount() < item_count) {
+			return MsgId.SELL_BAG_ITEM + " -33 " + "数量不足";
+		}
+		
+		// TODO
+		// check item money 
+		int money = 100 * item_count;
+		int remain_count = item.getCount() - item_count;
+		item.setCount(remain_count);
+		player.setCopper(player.getCopper() + money);
+		if (remain_count == 0) {
+			BagService.getInstance().deleteBagItem(item);
+		} else {
+			BagService.getInstance().updateBagItem(item);
+		}
+		PlayerService.getInstance().updatePlayer(player);
+
+		
+		return MsgId.SELL_BAG_ITEM + " " + u_id + " "+ remain_count
+				+ " " + player.getCopper();
+	}
+
+}

@@ -1,0 +1,37 @@
+
+#参数设置说明
+
+#smgip: 短信网关服务器IP
+smgip=127.0.0.1
+
+#smgport: 短信网关服务器PORT
+smgport=7890
+
+#cmppversion: CMPP 版本号
+cmppversion=2.0
+
+#corpid: SP企业代码(试用版901234)
+corpid=901234
+
+#spcode: SP服务号
+spcode=02939
+
+#sppasswd: SP连接密码
+sppasswd=1234
+
+#debuglevel: debug级别，无调试信息会使系统运行更好
+#0: 无调试信息， ... 4: 打印收发数据包包头信息， 5: 打印收发数据包所有信息（16进制）
+debuglevel=5
+
+#activetime1,activetime2: 激活测试包间隔（若您连接的网关反应较慢，可增大间隔）
+#客户端未收到数据activetime1（毫秒）后，向服务器发送ACTIVE_TEST，
+#再经过activetime2（毫秒）还未收到数据，再向服务器发送ACTIVE_TEST，
+#再经过activetime2（毫秒）还未收到数据，再向服务器发送ACTIVE_TEST，
+#再经过activetime2（毫秒）还未收到数据，向服务器发送TERMINATE，终止连接
+#activetime1=30000
+#activetime2=10000
+activetime1=60000
+activetime2=60000
+
+#软件注册码,试用版不填写
+regcode=

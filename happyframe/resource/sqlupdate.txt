@@ -1,0 +1,31 @@
+--账户user表
+CREATE TABLE `user` (
+  `name` varchar(50) NOT NULL,
+  `pwd` varchar(50) NOT NULL,
+  `playerId` int(10) NOT NULL,
+  PRIMARY KEY (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+--玩player表
+CREATE TABLE `player` (
+  `playerId` int(10) NOT NULL,
+  `viplevel` int(10) NOT NULL,
+  `gold` int(10) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `level` int(10) NOT NULL,
+  `strength` int(10) NOT NULL,
+  `xiaopan` int(10) DEFAULT NULL,
+  `wuxun` int(10) NOT NULL,
+  `shengWang` int(10) NOT NULL,
+  `exp` int(10) NOT NULL,
+  `potential` int(10) NOT NULL,
+  `fighting` int(10) NOT NULL,
+  `cardNum` int(10) NOT NULL,
+  `attack` int(10) NOT NULL,
+  `defend` int(10) NOT NULL,
+  `blood` int(10) NOT NULL,
+  `crit` int(10) NOT NULL,
+  `absoluteDefense` int(10) NOT NULL,
+  PRIMARY KEY (`playerId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

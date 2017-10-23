@@ -1,0 +1,25 @@
+2015-01-25 14:28:52,614 ERROR main com.frame.config.SystemConfig -
+2015-01-25 14:31:33,218 ERROR main com.frame.config.SystemConfig -
+2015-01-25 14:32:01,548 ERROR main com.frame.config.SystemConfig -
+2015-01-25 14:34:57,063 ERROR main com.frame.config.SystemConfig -
+2015-01-25 14:36:45,100 ERROR main com.frame.config.SystemConfig -
+2015-01-25 14:40:45,838 ERROR main com.frame.config.SystemConfig -
+2015-01-25 14:42:07,026 ERROR Thread-1 com.game.module.login.service.LoginService -
+java.lang.ArrayIndexOutOfBoundsException: 1
+	at com.game.module.login.service.LoginService.run(LoginService.java:75)
+	at java.lang.Thread.run(Unknown Source)
+2015-01-25 14:42:51,305 ERROR main com.frame.config.SystemConfig -
+2015-01-25 14:44:23,325 ERROR main com.frame.config.SystemConfig -
+2015-01-25 14:46:05,476 ERROR pool-3-thread-78 com.frame.listener.ListenerActionManager -
+java.lang.IllegalArgumentException: argument type mismatch
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.lang.reflect.Method.invoke(Unknown Source)
+	at com.frame.listener.ListenerActionManager.actionByType(ListenerActionManager.java:67)
+	at com.frame.OnlinePlayerManager.remove(OnlinePlayerManager.java:94)
+	at com.frame.extention.EventJobFactory$1RemoveEventJob.excete(EventJobFactory.java:87)
+	at com.frame.extention.EventJobManager$1.run(EventJobManager.java:86)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)

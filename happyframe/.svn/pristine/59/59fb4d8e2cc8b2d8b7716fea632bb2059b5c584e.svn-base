@@ -1,0 +1,136 @@
+package com.frame.extention;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.jboss.netty.channel.Channel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+
+import com.frame.OnlinePlayerManager;
+import com.frame.packet.ReqPacket;
+import com.frame.packet.anotation.Extention;
+import com.game.module.player.model.Player;
+import com.game.module.player.service.PlayerService;
+
+/**
+ * @author liuzhengyi
+ * @date 2014年11月18日 下午2:13:02
+ */
+public class EventJobFactory {
+
+	private static final Logger log = LoggerFactory
+			.getLogger(EventJobFactory.class);
+
+	private static Map<Short, Class<? extends AbstractEventJob>> eventJobs = new ConcurrentHashMap<Short, Class<? extends AbstractEventJob>>();
+	private static Map<String, Class<? extends AbstractEventJob>> strEventJobs = new ConcurrentHashMap<String, Class<? extends AbstractEventJob>>();
+
+	public static void init(ApplicationContext cxt) {
+
+		Map<String, Object> beans = cxt.getBeansWithAnnotation(Extention.class);
+		for (Object object : beans.values()) {
+			Extention annotation = object.getClass().getAnnotation(
+					Extention.class);
+			short extentionId = annotation.extentionId();
+			if (eventJobs.containsKey(extentionId)) {
+				throw new RuntimeException(
+						"the extentionId is exist,extentionId:" + extentionId
+								+ ",object name is :"
+								+ object.getClass().getName());
+			}
+			eventJobs.put(extentionId, ((AbstractEventJob) object).getClass());
+			
+			String msgId = annotation.msgId();
+			if (strEventJobs.containsKey(msgId)) {
+				throw new RuntimeException(
+						"the extentionId is exist,extentionId:" + extentionId
+								+ ",object name is :"
+								+ object.getClass().getName());
+			}
+			strEventJobs.put(msgId, ((AbstractEventJob) object).getClass());
+			System.out.println("INFO append strEventJobs cmd: " + msgId);
+		}
+	}
+
+	public static AbstractEventJob createExtention(ReqPacket req,
+			Channel channel) {
+		short extentionId = req.getPacketId();
+		if (!eventJobs.containsKey(extentionId)) {
+			return null;
+		}
+		Class<? extends AbstractEventJob> abstr = eventJobs.get(extentionId);
+		AbstractEventJob newInstance;
+		try {
+			newInstance = abstr.newInstance();
+			newInstance.setReqPacket(req);
+			newInstance.setChannel(channel);
+			return newInstance;
+		} catch (Exception e) {
+			log.error("", e);
+		}
+		return null;
+	}
+
+	public static AbstractEventJob createExtention(String msg,
+			Channel channel) {
+        int spIdx = msg.indexOf(' ');
+		String cmd = (spIdx < 0) ? msg.trim() : msg.substring(0, spIdx);
+		if (!strEventJobs.containsKey(cmd)) {
+			return null;
+		}
+		Class<? extends AbstractEventJob> abstr = strEventJobs.get(cmd);
+		AbstractEventJob newInstance;
+		try {
+			newInstance = abstr.newInstance();
+			newInstance.setMsgId(cmd);
+			newInstance.setMess(msg);
+			newInstance.setChannel(channel);
+			return newInstance;
+		} catch (Exception e) {
+			log.error("", e);
+		}
+		return null;
+	}
+
+	public static AbstractEventJob createExtention(int playerId) {
+		class RemoveEventJob extends AbstractEventJob {
+			/**
+			 * 
+			 * @see frame.extention.AbstractEventJob#excete()
+			 */
+			@Override
+			public Object excete() {
+				int playerId = getPlayerId();
+				// 判断玩家Id在退出时间记录中是否被移除，是则不执行该请求
+				if (!OnlinePlayerManager.getIntance().containKey(playerId)) {
+					log.debug("player logout is not cantain playerId :"
+							+ playerId);
+					return null;
+				}
+				boolean canRemove = OnlinePlayerManager.getIntance()
+						.isCanRemove(playerId);
+				if (canRemove) {
+					log.debug("is canRemove,id is :" + playerId);
+					try {
+						Player player = PlayerService.getInstance()
+								.getPlayerById(playerId);
+						if (player != null) {
+							OnlinePlayerManager.getIntance().remove(player);
+						}
+						EventJobManager.getInstance().removeCache(playerId);
+					} catch (Exception e) {
+						log.error("", e);
+					}
+					return null;
+				}
+				return this;
+			}
+		}
+
+		AbstractEventJob abstractEventJob = new RemoveEventJob();
+		abstractEventJob.setPlayerId(playerId);
+		return abstractEventJob;
+	}
+
+}

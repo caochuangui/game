@@ -1,0 +1,51 @@
+﻿-- --------------------------------------------------------
+-- 主机:                           127.0.0.1
+-- 服务器版本:                        5.5.41-MariaDB - mariadb.org binary distribution
+-- 服务器操作系统:                      Win64
+-- --------------------------------------------------------
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET NAMES utf8 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+
+-- happyframe 的数据库结构
+DROP DATABASE IF EXISTS `happyframe`;
+CREATE DATABASE IF NOT EXISTS `happyframe` /*!40100 DEFAULT CHARACTER SET utf8 */;
+USE `happyframe`;
+
+
+--  表 happyframe.player 结构
+CREATE TABLE IF NOT EXISTS `player` (
+  `playerId` int(100) NOT NULL DEFAULT '0',
+  `name` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `level` int(10) DEFAULT 0,
+  `viplevel` int(10) DEFAULT 0,
+  `copper` int(10) DEFAULT 0,
+  `gold` int(10) DEFAULT 0,
+  `exp` int(10) DEFAULT 0,
+  `bagMaxCount` int(10) DEFAULT 0,
+  PRIMARY KEY (`playerId`)
+) DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+
+--  表 happyframe.user 结构
+CREATE TABLE IF NOT EXISTS `user` (
+  `name` varchar(100) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+  `pwd` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `playerId` int(100) DEFAULT NULL,
+  PRIMARY KEY (`name`)
+) DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+
+--  表 happyframe.bag_item 结构
+CREATE TABLE IF NOT EXISTS `bag_item` (
+  `uid` INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  `playerId` INT NOT NULL,
+  `count` INT NOT NULL
+) DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+
+/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
+/*!40014 SET FOREIGN_KEY_CHECKS=IF(@OLD_FOREIGN_KEY_CHECKS IS NULL, 1, @OLD_FOREIGN_KEY_CHECKS) */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

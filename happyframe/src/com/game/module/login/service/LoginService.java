@@ -1,0 +1,242 @@
+package com.game.module.login.service;
+
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.jboss.netty.channel.Channel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.frame.OnlinePlayerManager;
+import com.frame.bean.ILoad;
+import com.frame.extention.AbstractEventJob;
+import com.frame.listener.ListenerActionManager;
+import com.game.commom.ConfigGlobal;
+import com.game.commom.listener.ListenerType;
+import com.game.module.MsgId;
+import com.game.module.farm.model.Farm;
+import com.game.module.farm.service.FarmService;
+import com.game.module.login.dao.UserDao;
+import com.game.module.login.event.LoginEventJob;
+import com.game.module.login.event.RegisterEventJob;
+import com.game.module.login.model.User;
+import com.game.module.player.dao.PlayerDao;
+import com.game.module.player.model.Player;
+import com.game.module.player.service.PlayerService;
+
+/**
+ * 单独的线程进行登陆处理
+ * 
+ * @author liuzhengyi
+ * @date 2014年11月19日 上午11:06:30
+ */
+@Component
+public class LoginService implements Runnable, ILoad {
+
+	private static final Logger log = LoggerFactory
+			.getLogger(LoginService.class);
+
+	@Autowired
+	UserDao userDao;
+	@Autowired
+	PlayerDao playerDao;
+
+	private static LoginService intance;
+	private static ConcurrentLinkedQueue<AbstractEventJob> extentions = new ConcurrentLinkedQueue<AbstractEventJob>();
+	private static boolean stop = false;
+	private AtomicInteger creatPlayerId = new AtomicInteger();
+
+	public static LoginService getIntance() {
+		return intance;
+	}
+
+	public LoginService() {
+		intance = this;
+	}
+
+	/**
+	 * 
+	 * @see java.lang.Runnable#run()
+	 */
+	@Override
+	public void run() {
+		try {
+			while (!stop) {
+
+				if (extentions.isEmpty()) {
+					Thread.sleep(100);
+					continue;
+				}
+
+				AbstractEventJob poll = extentions.poll();
+				Channel channel = poll.getChannel();
+				if (poll instanceof LoginEventJob) {
+
+					String msg = poll.getMess();
+					String[] msgArray = msg.split(" ");
+					if (msgArray.length < 3) {
+						channel.write(MsgId.LOGIN + " -3 " + "输入参数不足");
+						continue;
+					}
+
+					System.out.println("login : " + msg + " [" + msgArray[1]
+							+ "]");
+					String name = msgArray[1];
+					String pwd = msgArray[2];
+					System.out.println("login data: " + name + " " + pwd);
+					User user = userDao.getPlayerByName(name);
+					if (user == null) {
+						channel.write(MsgId.LOGIN + " -6 " + "用户不存在");
+						continue;
+					}
+
+					if (pwd == null || !pwd.equals(user.getPwd())) {
+						channel.write(MsgId.LOGIN + " -16 " + "用户密码错误");
+						continue;
+					}
+
+					StringBuffer sb = new StringBuffer(MsgId.LOGIN);
+					LoginService.getIntance().doLoginEffect(user, channel, sb);
+					channel.write(sb.toString());
+
+				} else if (poll instanceof RegisterEventJob) {
+
+					String msg = poll.getMess();
+					String[] msgArray = msg.split(" ");
+					if (msgArray.length < 3) {
+						channel.write(MsgId.REGISTER + " -3 " + "输入参数不足");
+						continue;
+					}
+					String name = msgArray[1];
+					String pwd = msgArray[2];
+
+					// TODO 手机号码判定
+					if (name.length() < 3 || name.length() > 15) {
+						channel.write(MsgId.REGISTER + " -5 " + "用户名输入错误");
+						continue;
+					}
+					if (pwd.length() < 6 || pwd.length() > 12) {
+						channel.write(MsgId.REGISTER + " -15 " + "密码长度输入错误");
+						continue;
+					}
+					// TODO 密码为数字或字母的判定
+
+					User user = userDao.getPlayerByName(name);
+					if (user != null) {
+						channel.write(MsgId.REGISTER + " -6 " + "用户名已经存在");
+						continue;
+					}
+
+					user = LoginService.getIntance().createUser(name, pwd);
+					int effectRow = userDao.addUser(user);
+					if (effectRow <= 0 || effectRow > 1) {
+						channel.write(MsgId.REGISTER + " -7 " + "数据库异常");
+					}
+
+					StringBuffer sb = new StringBuffer(MsgId.REGISTER);
+					LoginService.getIntance().doLoginEffect(user, channel, sb);
+					channel.write(sb.toString());
+
+				} // end EventJob
+
+			} // end while
+		} catch (Exception e) {
+			log.error("", e);
+		}
+
+	}
+
+	public void addExtention(AbstractEventJob abstractExtention) {
+		extentions.add(abstractExtention);
+	}
+
+	public void shutdown() {
+		stop = true;
+	}
+
+	public void doLoginEffect(User user, Channel channel, StringBuffer sb) {
+
+		// 移除退出倒计时
+		OnlinePlayerManager.getIntance().clearBeatCount(channel);
+
+		int pId = user.getPlayerId();
+		sb.append(" ").append(pId);
+		// 登陆流程
+		Player player = playerDao.getPlayerById(pId);
+		if (player == null) {
+			player = PlayerService.getInstance().createPlayer(pId);
+			playerDao.addPlayer(player);
+		}
+
+		// 无玩家名字的回传"_"代表，命名不可用单个下划线
+		if (player.getName() == null || "".equals(player.getName())) {
+			sb.append(" ").append("_");
+		} else {
+			sb.append(" ").append(player.getName());
+		}
+
+		sb.append(" ").append(player.toMsg());
+
+		// TODO next Exp should get from design table
+		long nextExp = 100;
+		sb.append(" ").append(nextExp);
+
+		Set<Farm> farm_list = FarmService.getInstance().getAllFarm(pId);
+		sb.append(" ").append(farm_list.size());
+		for (Farm farm : farm_list) {
+			sb.append(" ").append(farm.toMsg());
+		}
+
+		// TODO this will cause channel close exception
+		// fix it later
+		boolean flag = OnlinePlayerManager.getIntance().afterLogin(player,
+				channel);
+		if (flag) {
+			// 执行登陆后的监听器
+			// List<AfterLoginListener> listeners =
+			// ListenerManager
+			// .getIntance().getListeners(
+			// AfterLoginListener.class);
+			// for (AfterLoginListener afterLoginListener :
+			// listeners) {
+			// try {
+			// afterLoginListener.afterLogin(player);
+			// } catch (Exception e) {
+			// log.error("", e);
+			// }
+			// }
+			ListenerActionManager.getIntance().actionByType(
+					ListenerType.AFTER_LOGIN, player);
+		}
+
+	}
+
+	/**
+	 * 
+	 * @see com.gzwabao.frame.bean.ILoad#load()
+	 */
+	@Override
+	public void load() throws Exception {
+		Integer maxCreatePlayerId = userDao.getCreatePlayerId();
+		if (maxCreatePlayerId != null) {
+			maxCreatePlayerId += 1;
+		} else {
+			maxCreatePlayerId = ConfigGlobal.getInstance().getSystemConfig()
+					.getServerId() * 1000000 + 1;
+
+		}
+		creatPlayerId.set(maxCreatePlayerId);
+	}
+
+	public User createUser(String name, String pwd) {
+		User user = new User();
+		user.setName(name);
+		user.setPwd(pwd);
+		user.setPlayerId(creatPlayerId.getAndIncrement());
+		return user;
+	}
+
+}

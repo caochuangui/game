@@ -1,0 +1,54 @@
+﻿-- --------------------------------------------------------
+-- 主机:                           127.0.0.1
+-- 服务器版本:                        5.5.41-MariaDB - mariadb.org binary distribution
+-- 服务器操作系统:                      Win64
+-- --------------------------------------------------------
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET NAMES utf8 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+
+-- happyframe 的数据库结构
+DROP DATABASE IF EXISTS `frame_design`;
+CREATE DATABASE IF NOT EXISTS `frame_design` /*!40100 DEFAULT CHARACTER SET utf8 */;
+USE `frame_design`;
+
+
+--  表 frame_design.design_lvup 结构
+CREATE TABLE IF NOT EXISTS `design_lvup` (
+  `level` int(100) UNSIGNED UNIQUE NOT NULL,
+  `exp` int(10) UNSIGNED DEFAULT 0,
+  `copper` int(10) DEFAULT 0,
+  `gold` int(10) DEFAULT 0,
+  PRIMARY KEY (`level`)
+) DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+
+--  表 frame_design.design_warehouse_lvup 结构
+CREATE TABLE IF NOT EXISTS `design_warehouse_lvup` (
+  `maxCount` int(10) UNSIGNED DEFAULT 0,
+  `upGold` int(10) UNSIGNED DEFAULT 0,
+  `upCount` int(10) UNSIGNED DEFAULT 0
+) DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+
+--  表 frame_design.design_shop 结构
+CREATE TABLE IF NOT EXISTS `design_shop` (
+  `shopId` INT UNSIGNED NOT NULL,
+  `itemId` INT UNSIGNED NOT NULL,
+  `copper`	INT UNSIGNED NOT NULL,
+  `gold`	INT UNSIGNED NOT NULL,
+  PRIMARY KEY(`shopId`, `itemId`)
+) DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+
+
+
+INSERT INTO design_warehouse_lvup values(500, 20, 20);
+
+
+/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
+/*!40014 SET FOREIGN_KEY_CHECKS=IF(@OLD_FOREIGN_KEY_CHECKS IS NULL, 1, @OLD_FOREIGN_KEY_CHECKS) */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+

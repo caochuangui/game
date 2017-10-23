@@ -1,0 +1,32 @@
+package com.game.module.player.event;
+
+import java.util.Map;
+
+import com.frame.extention.AbstractEventJob;
+import com.frame.packet.RespPacket;
+import com.frame.packet.anotation.Extention;
+import com.game.module.MsgId;
+import com.game.module.PacketId;
+import com.game.module.player.service.PlayerService;
+
+/**
+ * @author liuzhengyi
+ * @date 2014年11月17日 下午9:01:25
+ */
+@Extention(extentionId = PacketId.ADD_GOLD, msgId = MsgId.ADD_GOLD)
+public class PlayerEventJobTest extends AbstractEventJob {
+
+	/**
+	 * 
+	 * @see frame.extention.AbstractEventJob#excete()
+	 */
+	@Override
+	public RespPacket excete() {
+		String msg = getMess();
+		int gold = Integer.valueOf(msg);
+		RespPacket respPacket = PlayerService.getInstance().addGoldAndResp(
+				getPlayerId(), gold);
+		return respPacket;
+	}
+
+}
